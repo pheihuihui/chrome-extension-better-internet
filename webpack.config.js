@@ -4,8 +4,8 @@ module.exports = {
     entry: {
         index_options: './src/options.ts',
         index_popup: './src/popup.ts',
-        background: './src/background.ts',
-
+        index_editor: './src/editor.ts',
+        background: './src/background.ts'
     },
     optimization: {
         minimize: false
