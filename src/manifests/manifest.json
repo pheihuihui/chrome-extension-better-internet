@@ -1,6 +1,6 @@
 {
   "name": "Better Internet",
-  "version": "1.0",
+  "version": "2.0",
   "description": "",
   "permissions": [
     "nativeMessaging",
@@ -10,7 +10,8 @@
     "tabs",
     "webRequest",
     "<all_urls>",
-    "alarms"
+    "alarms",
+    "proxy"
   ],
   "options_page": "options.html",
   "background": {
@@ -22,17 +23,29 @@
   "page_action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "domain_16.png",
-      "32": "domain_32.png",
-      "48": "domain_48.png",
-      "128": "domain_128.png"
+      "16": "check_16.png",
+      "32": "check_32.png",
+      "48": "check_48.png",
+      "128": "check_128.png"
+    },
+    "add_icon": {
+      "16": "add_16.png",
+      "32": "add_32.png",
+      "48": "add_48.png",
+      "128": "add_128.png"
+    },
+    "question_icon": {
+      "16": "question_16.png",
+      "32": "question_32.png",
+      "48": "question_48.png",
+      "128": "question_128.png"
     }
   },
   "icons": {
-    "16": "domain_16.png",
-    "32": "domain_32.png",
-    "48": "domain_48.png",
-    "128": "domain_128.png"
+    "16": "check_16.png",
+    "32": "check_32.png",
+    "48": "check_48.png",
+    "128": "check_128.png"
   },
   "manifest_version": 2
 }

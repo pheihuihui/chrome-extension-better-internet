@@ -31,6 +31,7 @@ chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.set({ 'blockedList': {} })
     chrome.storage.local.set({ 'ignoredList': {} })
     chrome.storage.local.set({ 'recentList': {} })
+    //chrome.proxy.settings.set({ value: _fixed })
 })
 
 const db = TinyDB.getDB()
@@ -104,3 +105,20 @@ chrome.runtime.onMessage.addListener((req: MessageType, sender, sendResponse) =>
     sendResponse('unknown command')
 
 })
+
+let _direct: chrome.proxy.ProxyConfig = {
+    mode: 'direct'
+}
+
+let _fixed: chrome.proxy.ProxyConfig = {
+    mode: 'fixed_servers',
+    rules: {
+        singleProxy: {
+            host: '127.0.0.1',
+            port: 10800
+        },
+        bypassList: [
+
+        ]
+    }
+}
