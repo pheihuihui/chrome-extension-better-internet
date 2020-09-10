@@ -1,5 +1,6 @@
 import { TinyDB } from "./Analyzor/DB";
 import { RequestAnalyzor, setIntervalX } from "./Analyzor/RequestAnalyzor";
+import { TTabsProxyEnabled } from "./DataTypes";
 
 export const localStoredContent = {
     settings: 'settings',
@@ -37,9 +38,15 @@ chrome.runtime.onInstalled.addListener(() => {
 const db = TinyDB.getDB()
 db.init()
 const ana = new RequestAnalyzor(db);
+const proxies: TTabsProxyEnabled = {}
+let cur_proxy: 'direct' | 'fixed' = 'direct'
 
 export const listn_req = (detail: chrome.webRequest.WebRequestBodyDetails) => {
     ana.accept_onBeforeRequest(detail)
+}
+
+export const listn_proxy = (detail: chrome.webRequest.WebRequestBodyDetails) => {
+    return { cancel: true } as chrome.webRequest.BlockingResponse
 }
 
 export const listn_comp = (detail: chrome.webRequest.WebResponseCacheDetails) => {
@@ -122,3 +129,24 @@ let _fixed: chrome.proxy.ProxyConfig = {
         ]
     }
 }
+
+function switchToDirect() {
+    chrome.proxy.settings.set({ value: _direct }, () => {
+        cur_proxy = 'direct'
+    })
+}
+
+function switchToFixed() {
+    chrome.proxy.settings.set({ value: _fixed }, () => {
+        cur_proxy = 'fixed'
+    })
+}
+
+chrome.webRequest.onBeforeRequest.addListener(detail => {
+    let id = detail.tabId
+    let pr = proxies[id]
+    if ((pr && cur_proxy == 'direct') || (!pr && cur_proxy == 'fixed')) {
+        return { cancel: true }
+    }
+})
+

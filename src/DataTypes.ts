@@ -58,3 +58,5 @@ export interface V2RayMessage {
     newPac: string[]
     needRestart: boolean
 }
+
+export type TTabsProxyEnabled = Record<number, boolean>
