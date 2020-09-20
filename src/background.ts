@@ -1,3 +1,4 @@
+import { Tab } from "@material-ui/core";
 import { TinyDB } from "./Analyzor/DB";
 import { RequestAnalyzor, setIntervalX } from "./Analyzor/RequestAnalyzor";
 import { TTabsProxyEnabled } from "./DataTypes";
@@ -32,7 +33,6 @@ chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.set({ 'blockedList': {} })
     chrome.storage.local.set({ 'ignoredList': {} })
     chrome.storage.local.set({ 'recentList': {} })
-    //chrome.proxy.settings.set({ value: _fixed })
 })
 
 const db = TinyDB.getDB()
@@ -150,3 +150,24 @@ chrome.webRequest.onBeforeRequest.addListener(detail => {
     }
 })
 
+const checkUrl = (url: string): 'chrome' | 'pac' | 'domestic' => {
+    return 'pac'
+}
+
+chrome.tabs.onActivated.addListener(info => {
+    chrome.tabs.get(info.tabId, tab => {
+        if (tab.url && checkUrl(tab.url) == 'domestic') {
+            proxies[info.tabId] = false
+        } else {
+            proxies[info.tabId] = true
+        }
+    })
+})
+
+chrome.tabs.onUpdated.addListener((id, info) => {
+    if (info.url && checkUrl(info.url) == 'domestic') {
+        proxies[id] = false
+    } else {
+        proxies[id] = true
+    }
+})
