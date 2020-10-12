@@ -1,8 +1,7 @@
-const CopyPlugin = require('copy-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
     entry: {
-        index_options: './src/options.ts',
         index_popup: './src/popup.ts',
         index_editor: './src/editor.ts',
         background: './src/background.ts'
@@ -39,10 +38,12 @@ module.exports = {
     //     "material-ui": "MaterialUI"
     // },
     plugins: [
-        new CopyPlugin([
-            { from: './src/images/', to: './' },
-            { from: './src/pages/', to: './' },
-            { from: './src/manifests/', to: './' }
-        ]),
+        new CopyPlugin({
+            patterns: [
+                { from: './src/images/', to: './' },
+                { from: './src/pages/', to: './' },
+                { from: './src/manifests/', to: './' }
+            ]
+        })
     ]
 };

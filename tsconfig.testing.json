@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2019",
+        "lib": [
+            "ES2019"
+        ],
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "inlineSourceMap": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true
+    },
+    "include": [
+        "./src/tests/*.ts"
+    ]
+}

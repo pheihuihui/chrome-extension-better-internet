@@ -23,29 +23,17 @@
   "page_action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "check_16.png",
-      "32": "check_32.png",
-      "48": "check_48.png",
-      "128": "check_128.png"
-    },
-    "add_icon": {
-      "16": "add_16.png",
-      "32": "add_32.png",
-      "48": "add_48.png",
-      "128": "add_128.png"
-    },
-    "question_icon": {
-      "16": "question_16.png",
-      "32": "question_32.png",
-      "48": "question_48.png",
-      "128": "question_128.png"
+      "16": "internet_16.png",
+      "32": "internet_32.png",
+      "48": "internet_48.png",
+      "128": "internet_128.png"
     }
   },
   "icons": {
-    "16": "check_16.png",
-    "32": "check_32.png",
-    "48": "check_48.png",
-    "128": "check_128.png"
+    "16": "internet_16.png",
+    "32": "internet_32.png",
+    "48": "internet_48.png",
+    "128": "internet_128.png"
   },
   "manifest_version": 2
 }
