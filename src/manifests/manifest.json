@@ -9,9 +9,11 @@
     "storage",
     "tabs",
     "webRequest",
+    "webRequestBlocking",
     "<all_urls>",
     "alarms",
-    "proxy"
+    "proxy",
+    "contextMenus"
   ],
   "options_page": "options.html",
   "background": {
@@ -20,8 +22,7 @@
     ],
     "persistent": true
   },
-  "page_action": {
-    "default_popup": "popup.html",
+  "browser_action": {
     "default_icon": {
       "16": "internet_16.png",
       "32": "internet_32.png",

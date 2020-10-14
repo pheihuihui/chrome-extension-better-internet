@@ -1,4 +1,14 @@
+function validateTheUrl(url: string) {
+    if (url.match('youtube')?.index) {
+        return true
+    } else {
+        return false
+    }
+}
+
 export type TTabsProxyEnabled = Record<number, boolean>
+export type TPageType = 'pac' | 'local' | 'domestic'
+export type TProxyType = 'direct' | 'fixed'
 
 export const localStoredContent = {
     proxyServer: 'proxy_address',
@@ -6,9 +16,9 @@ export const localStoredContent = {
     gfwPac: 'pac_gfw'
 }
 
-const proxies: TTabsProxyEnabled = {}
+const tabsProxyEnabled: TTabsProxyEnabled = {}
 
-let cur_proxy: 'direct' | 'fixed' = 'direct'
+let cur_proxy: TProxyType = 'direct'
 
 let _direct: chrome.proxy.ProxyConfig = {
     mode: 'direct'
@@ -43,30 +53,62 @@ function switchToFixed() {
 
 chrome.webRequest.onBeforeRequest.addListener(detail => {
     let id = detail.tabId
-    let pr = proxies[id]
+    // console.log(id)
+    let pr = tabsProxyEnabled[id]
     if ((pr && cur_proxy == 'direct') || (!pr && cur_proxy == 'fixed')) {
         return { cancel: true }
+    } else {
+        // return { cancel: false }
     }
-})
+}, {
+    urls: ["<all_urls>"]
+}, ["blocking"])
 
-const checkUrl = (url: string): 'chrome' | 'pac' | 'domestic' => {
-    return 'pac'
-}
 
 chrome.tabs.onActivated.addListener(info => {
     chrome.tabs.get(info.tabId, tab => {
-        if (tab.url && checkUrl(tab.url) == 'domestic') {
-            proxies[info.tabId] = false
+        if (tab.url && validateTheUrl(tab.url)) {
+            tabsProxyEnabled[info.tabId] = true
+            switchToFixed()
         } else {
-            proxies[info.tabId] = true
+            tabsProxyEnabled[info.tabId] = false
+            switchToDirect()
         }
     })
+    // console.log(tabsProxyEnabled)
+    // chrome.tabs.query({ currentWindow: true }, res => {
+    //     console.log(res.map(x => x.id))
+    // })
 })
 
-chrome.tabs.onUpdated.addListener((id, info) => {
-    if (info.url && checkUrl(info.url) == 'domestic') {
-        proxies[id] = false
+chrome.tabs.onUpdated.addListener((id, info, tab) => {
+    if (tab.url && validateTheUrl(tab.url)) {
+        tabsProxyEnabled[id] = true
     } else {
-        proxies[id] = true
+        tabsProxyEnabled[id] = false
     }
+})
+
+chrome.tabs.onCreated.addListener(tab => {
+    if (tab.id) {
+        if (tab.url && validateTheUrl(tab.url)) {
+            tabsProxyEnabled[tab.id] = true
+        } else {
+            tabsProxyEnabled[tab.id] = false
+        }
+    }
+})
+
+
+chrome.tabs.query({ currentWindow: true }, res => {
+    console.log(res.map(x => x.id))
+})
+
+chrome.browserAction.setBadgeText({ text: '!' })
+chrome.browserAction.setBadgeBackgroundColor({ color: 'red' })
+chrome.contextMenus.create({
+    title: 'hi',
+    onclick: () => { alert('hi') },
+    enabled: true,
+    visible: true
 })

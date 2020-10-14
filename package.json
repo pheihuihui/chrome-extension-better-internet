@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "cross-env TS_NODE_PROJECT=\"tsconfig.testing.json\" mocha --require ts-node/register './src/tests/*.ts'",
     "build": "webpack"
