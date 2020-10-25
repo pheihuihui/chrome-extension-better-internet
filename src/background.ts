@@ -1,3 +1,5 @@
+import { Details } from "@material-ui/icons"
+
 function validateTheUrl(url: string) {
     if (url.match('youtube')?.index) {
         return true
@@ -9,6 +11,10 @@ function validateTheUrl(url: string) {
 export type TTabsProxyEnabled = Record<number, boolean>
 export type TPageType = 'pac' | 'local' | 'domestic'
 export type TProxyType = 'direct' | 'fixed'
+export type THistory = {
+    URL: string
+    Host: string
+}
 
 export const localStoredContent = {
     proxyServer: 'proxy_address',
@@ -51,35 +57,28 @@ function switchToFixed() {
     })
 }
 
-chrome.webRequest.onBeforeRequest.addListener(detail => {
-    let id = detail.tabId
-    // console.log(id)
-    let pr = tabsProxyEnabled[id]
-    if ((pr && cur_proxy == 'direct') || (!pr && cur_proxy == 'fixed')) {
-        return { cancel: true }
-    } else {
-        // return { cancel: false }
-    }
-}, {
-    urls: ["<all_urls>"]
-}, ["blocking"])
+// chrome.webRequest.onBeforeRequest.addListener(detail => {
+//     let id = detail.tabId
+//     let pr = tabsProxyEnabled[id]
+//     if ((pr && cur_proxy == 'direct') || (!pr && cur_proxy == 'fixed')) {
+//         return { cancel: true }
+//     }
+// }, {
+//     urls: ["<all_urls>"]
+// }, ["blocking"])
 
 
-chrome.tabs.onActivated.addListener(info => {
-    chrome.tabs.get(info.tabId, tab => {
-        if (tab.url && validateTheUrl(tab.url)) {
-            tabsProxyEnabled[info.tabId] = true
-            switchToFixed()
-        } else {
-            tabsProxyEnabled[info.tabId] = false
-            switchToDirect()
-        }
-    })
-    // console.log(tabsProxyEnabled)
-    // chrome.tabs.query({ currentWindow: true }, res => {
-    //     console.log(res.map(x => x.id))
-    // })
-})
+// chrome.tabs.onActivated.addListener(info => {
+//     chrome.tabs.get(info.tabId, tab => {
+//         if (tab.url && validateTheUrl(tab.url)) {
+//             tabsProxyEnabled[info.tabId] = true
+//             switchToFixed()
+//         } else {
+//             tabsProxyEnabled[info.tabId] = false
+//             switchToDirect()
+//         }
+//     })
+// })
 
 chrome.tabs.onUpdated.addListener((id, info, tab) => {
     if (tab.url && validateTheUrl(tab.url)) {
@@ -112,3 +111,25 @@ chrome.contextMenus.create({
     enabled: true,
     visible: true
 })
+
+let histories: THistory[] = []
+chrome.webRequest.onBeforeRequest.addListener(details => {
+    let url = new URL(details.url)
+    let host = url.host
+    histories.push({
+        URL: details.url,
+        Host: host
+    })
+}, {
+    urls: ["<all_urls>"]
+}, [])
+
+declare global {
+    interface Window {
+        histories: any
+    }
+}
+
+window.histories = histories
+
+chrome.proxy.settings.set({ value: { mode: 'system' } })

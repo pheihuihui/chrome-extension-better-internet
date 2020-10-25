@@ -348,7 +348,7 @@ export class RegExpFilter extends ActiveFilter {
     static typeMap = c_typeMap
 }
 
-class BlockingFilter extends RegExpFilter {
+export class BlockingFilter extends RegExpFilter {
     constructor(txt: string, regexpSource: string, contentType: number | null, matchCase: boolean, domains: string, thirdParty: boolean, sitekeys: string, collapse: unknown) {
         super(txt, regexpSource, contentType, matchCase, domains, thirdParty, sitekeys)
         this.collapse = collapse
@@ -586,7 +586,7 @@ export class CombinedMatcher {
         }
     }
 
-    matchesAnyInternal(location: string, contentType: number, docDomain: string, thirdParty: boolean | null, sitekey: string | null) {
+    private matchesAnyInternal(location: string, contentType: number, docDomain: string, thirdParty: boolean | null, sitekey: string | null) {
         let candidates = location.toLowerCase().match(/[a-z0-9%]{3,}/g);
         if (candidates === null) {
             candidates = [];
@@ -623,3 +623,4 @@ export class CombinedMatcher {
         return result;
     }
 }
+

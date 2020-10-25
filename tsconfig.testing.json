@@ -10,9 +10,12 @@
         "removeComments": true,
         "inlineSourceMap": true,
         "moduleResolution": "node",
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "allowJs": true
     },
     "include": [
-        "./src/tests/*.ts"
+        "./src/tests/*.ts",
+        "./src/pac_im.ts",
+        "./src/pac.js"
     ]
 }
