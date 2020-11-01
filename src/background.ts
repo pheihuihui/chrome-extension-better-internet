@@ -1,12 +1,5 @@
-import { Details } from "@material-ui/icons"
-
-function validateTheUrl(url: string) {
-    if (url.match('youtube')?.index) {
-        return true
-    } else {
-        return false
-    }
-}
+import { BlockingFilter, CombinedMatcher, Filter, RegExpFilter } from "./pac_im"
+import { testRules } from "./tests/testRules"
 
 export type TTabsProxyEnabled = Record<number, boolean>
 export type TPageType = 'pac' | 'local' | 'domestic'
@@ -16,21 +9,19 @@ export type THistory = {
     Host: string
 }
 
-export const localStoredContent = {
+export const _localStoredContent = {
     proxyServer: 'proxy_address',
     personalPac: 'pac_personal',
     gfwPac: 'pac_gfw'
 }
 
-const tabsProxyEnabled: TTabsProxyEnabled = {}
-
-let cur_proxy: TProxyType = 'direct'
-
-let _direct: chrome.proxy.ProxyConfig = {
+const _proxyMatcher = new CombinedMatcher()
+const _adBlockMatcher = new CombinedMatcher()
+const _tabsProxyEnabled: TTabsProxyEnabled = {}
+const _direct: chrome.proxy.ProxyConfig = {
     mode: 'direct'
 }
-
-let _fixed: chrome.proxy.ProxyConfig = {
+const _fixed: chrome.proxy.ProxyConfig = {
     mode: 'fixed_servers',
     rules: {
         singleProxy: {
@@ -40,6 +31,111 @@ let _fixed: chrome.proxy.ProxyConfig = {
         bypassList: [
 
         ]
+    }
+}
+const _allUrlsFilter: chrome.webRequest.RequestFilter = { urls: ["<all_urls>"] }
+
+let cur_proxy: TProxyType = 'direct'
+
+chrome.storage.local.set({ [_localStoredContent.personalPac]: testRules })
+chrome.storage.local.set({ [_localStoredContent.proxyServer]: '127.0.0.1:10800' })
+
+chrome.storage.local.get(Object.values(_localStoredContent), result => {
+    // get server
+    let server = result[_localStoredContent.proxyServer] as string
+    let addr = server.split(":")[0]
+    let port = server.split(":")[1]
+    if (_fixed.rules?.singleProxy) {
+        _fixed.rules.singleProxy.host = addr
+        if (port) {
+            _fixed.rules.singleProxy.port = parseInt(port)
+        }
+    }
+
+    // get rules
+    let allRules = result[_localStoredContent.personalPac] as string[]
+    for (const rule of allRules) {
+        _proxyMatcher.add(Filter.fromText(rule) as RegExpFilter)
+    }
+})
+
+chrome.webRequest.onBeforeRequest.addListener(detail => {
+    let id = detail.tabId
+    let pr = _tabsProxyEnabled[id]
+    if (id != -1) {  // Service Worker Tab ID: -1
+        if ((pr && cur_proxy == 'direct') || (!pr && cur_proxy == 'fixed')) {
+            return { cancel: true }
+        }
+    }
+}, _allUrlsFilter, ["blocking"])
+
+chrome.tabs.onActivated.addListener(info => {
+    chrome.tabs.get(info.tabId, tab => {
+        if (tab.id) {
+            let newUrl = getCurrentUrlFromTab(tab)
+            if (newUrl) {
+                if (validateUrl(newUrl)) {
+                    _tabsProxyEnabled[tab.id] = true
+                    switchToFixed()
+                } else {
+                    _tabsProxyEnabled[tab.id] = false
+                    switchToDirect()
+                }
+            }
+        }
+    })
+})
+
+chrome.tabs.onUpdated.addListener((id, info, tab) => {
+    if (tab.id) {
+        let newUrl = getCurrentUrlFromTab(tab)
+        if (newUrl) {
+            if (validateUrl(newUrl)) {
+                _tabsProxyEnabled[tab.id] = true
+                switchToFixed()
+            } else {
+                _tabsProxyEnabled[tab.id] = false
+                switchToDirect()
+            }
+        }
+    }
+})
+
+chrome.tabs.onCreated.addListener(tab => {
+    if (tab.id) {
+        let newUrl = getCurrentUrlFromTab(tab)
+        if (newUrl) {
+            if (validateUrl(newUrl)) {
+                _tabsProxyEnabled[tab.id] = true
+                switchToFixed()
+            } else {
+                _tabsProxyEnabled[tab.id] = false
+                switchToDirect()
+            }
+        }
+    }
+})
+
+chrome.contextMenus.create({
+    title: 'Add current url to PAC',
+    onclick: () => {
+        chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
+            let pendingUrl = tabs[0].pendingUrl
+            let url = tabs[0].url
+            console.log(pendingUrl ?? url)
+            // chrome.tabs.create({ url: 'options.html' })
+        })
+    },
+    enabled: true,
+    visible: true
+})
+
+function validateUrl(url: string) {
+    let host = new URL(url).host
+    if (_proxyMatcher.matchesAny(url, host) instanceof BlockingFilter) {
+        return true
+    } else {
+        return false
     }
 }
 
@@ -54,82 +150,33 @@ function switchToFixed() {
     chrome.proxy.settings.set({ value: _fixed }, () => {
         cur_proxy = 'fixed'
         chrome.browserAction.setBadgeText({ text: '!' })
+        chrome.browserAction.setBadgeBackgroundColor({ color: 'red' })
     })
 }
 
-// chrome.webRequest.onBeforeRequest.addListener(detail => {
-//     let id = detail.tabId
-//     let pr = tabsProxyEnabled[id]
-//     if ((pr && cur_proxy == 'direct') || (!pr && cur_proxy == 'fixed')) {
-//         return { cancel: true }
-//     }
-// }, {
-//     urls: ["<all_urls>"]
-// }, ["blocking"])
+function getCurrentUrlFromTab(tab: chrome.tabs.Tab) {
+    if (tab.pendingUrl) {
+        return tab.pendingUrl
+    } else {
+        return tab.url
+    }
+}
 
 
-// chrome.tabs.onActivated.addListener(info => {
-//     chrome.tabs.get(info.tabId, tab => {
-//         if (tab.url && validateTheUrl(tab.url)) {
-//             tabsProxyEnabled[info.tabId] = true
-//             switchToFixed()
-//         } else {
-//             tabsProxyEnabled[info.tabId] = false
-//             switchToDirect()
-//         }
-//     })
+///////////////////////for debuging///////////////////////
+// chrome.tabs.onUpdated.addListener((id, info, tab) => {
+//     console.log('updated', info)
 // })
 
-chrome.tabs.onUpdated.addListener((id, info, tab) => {
-    if (tab.url && validateTheUrl(tab.url)) {
-        tabsProxyEnabled[id] = true
-    } else {
-        tabsProxyEnabled[id] = false
-    }
-})
-
-chrome.tabs.onCreated.addListener(tab => {
-    if (tab.id) {
-        if (tab.url && validateTheUrl(tab.url)) {
-            tabsProxyEnabled[tab.id] = true
-        } else {
-            tabsProxyEnabled[tab.id] = false
-        }
-    }
-})
-
-
-chrome.tabs.query({ currentWindow: true }, res => {
-    console.log(res.map(x => x.id))
-})
-
-chrome.browserAction.setBadgeText({ text: '!' })
-chrome.browserAction.setBadgeBackgroundColor({ color: 'red' })
-chrome.contextMenus.create({
-    title: 'hi',
-    onclick: () => { alert('hi') },
-    enabled: true,
-    visible: true
-})
-
-let histories: THistory[] = []
 chrome.webRequest.onBeforeRequest.addListener(details => {
-    let url = new URL(details.url)
-    let host = url.host
-    histories.push({
-        URL: details.url,
-        Host: host
-    })
-}, {
-    urls: ["<all_urls>"]
-}, [])
+    console.log(details.tabId, _tabsProxyEnabled)
+}, _allUrlsFilter, [])
 
-declare global {
-    interface Window {
-        histories: any
-    }
-}
+// declare global {
+//     interface Window {
+//         validateUrl: any
+//     }
+// }
 
-window.histories = histories
-
-chrome.proxy.settings.set({ value: { mode: 'system' } })
+// window.validateUrl = validateUrl
+//////////////////////////////////////////////////////////

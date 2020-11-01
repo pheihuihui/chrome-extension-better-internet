@@ -623,4 +623,3 @@ export class CombinedMatcher {
         return result;
     }
 }
-
