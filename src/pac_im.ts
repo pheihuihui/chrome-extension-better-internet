@@ -1,5 +1,3 @@
-import { ThreeSixtySharp } from "@material-ui/icons"
-
 const typeMapKeys = ['OTHER', 'SCRIPT', 'IMAGE', 'STYLESHEET', 'OBJECT', 'SUBDOCUMENT', 'DOCUMENT', 'XBL', 'PING', 'XMLHTTPREQUEST', 'OBJECT_SUBREQUEST', 'DTD', 'MEDIA', 'FONT', 'BACKGROUND', 'POPUP', 'ELEMHIDE'] as const
 type TTypeMapKeys = typeof typeMapKeys[number]
 type Nullable<T> = T | null

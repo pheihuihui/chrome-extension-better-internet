@@ -18,10 +18,10 @@ export const _localStoredContent = {
 const _proxyMatcher = new CombinedMatcher()
 const _adBlockMatcher = new CombinedMatcher()
 const _tabsProxyEnabled: TTabsProxyEnabled = {}
-const _direct: chrome.proxy.ProxyConfig = {
+const _directMode: chrome.proxy.ProxyConfig = {
     mode: 'direct'
 }
-const _fixed: chrome.proxy.ProxyConfig = {
+const _fixedMode: chrome.proxy.ProxyConfig = {
     mode: 'fixed_servers',
     rules: {
         singleProxy: {
@@ -36,6 +36,7 @@ const _fixed: chrome.proxy.ProxyConfig = {
 const _allUrlsFilter: chrome.webRequest.RequestFilter = { urls: ["<all_urls>"] }
 
 let cur_proxy: TProxyType = 'direct'
+let cur_tab = 0
 
 chrome.storage.local.set({ [_localStoredContent.personalPac]: testRules })
 chrome.storage.local.set({ [_localStoredContent.proxyServer]: '127.0.0.1:10800' })
@@ -45,10 +46,10 @@ chrome.storage.local.get(Object.values(_localStoredContent), result => {
     let server = result[_localStoredContent.proxyServer] as string
     let addr = server.split(":")[0]
     let port = server.split(":")[1]
-    if (_fixed.rules?.singleProxy) {
-        _fixed.rules.singleProxy.host = addr
+    if (_fixedMode.rules?.singleProxy) {
+        _fixedMode.rules.singleProxy.host = addr
         if (port) {
-            _fixed.rules.singleProxy.port = parseInt(port)
+            _fixedMode.rules.singleProxy.port = parseInt(port)
         }
     }
 
@@ -61,9 +62,15 @@ chrome.storage.local.get(Object.values(_localStoredContent), result => {
 
 chrome.webRequest.onBeforeRequest.addListener(detail => {
     let id = detail.tabId
-    let pr = _tabsProxyEnabled[id]
-    if (id != -1) {  // Service Worker Tab ID: -1
+    let pr = _tabsProxyEnabled[cur_tab]
+    if (id != -1) {
         if ((pr && cur_proxy == 'direct') || (!pr && cur_proxy == 'fixed')) {
+            return { cancel: true }
+        }
+    } else {
+        // service worker tab id is -1
+        let isPac = validateUrl(detail.initiator ?? '')
+        if ((pr && !isPac) || (!pr && isPac)) {
             return { cancel: true }
         }
     }
@@ -76,9 +83,11 @@ chrome.tabs.onActivated.addListener(info => {
             if (newUrl) {
                 if (validateUrl(newUrl)) {
                     _tabsProxyEnabled[tab.id] = true
+                    cur_tab = tab.id
                     switchToFixed()
                 } else {
                     _tabsProxyEnabled[tab.id] = false
+                    cur_tab = tab.id
                     switchToDirect()
                 }
             }
@@ -140,14 +149,14 @@ function validateUrl(url: string) {
 }
 
 function switchToDirect() {
-    chrome.proxy.settings.set({ value: _direct }, () => {
+    chrome.proxy.settings.set({ value: _directMode }, () => {
         cur_proxy = 'direct'
         chrome.browserAction.setBadgeText({ text: '' })
     })
 }
 
 function switchToFixed() {
-    chrome.proxy.settings.set({ value: _fixed }, () => {
+    chrome.proxy.settings.set({ value: _fixedMode }, () => {
         cur_proxy = 'fixed'
         chrome.browserAction.setBadgeText({ text: '!' })
         chrome.browserAction.setBadgeBackgroundColor({ color: 'red' })
@@ -168,15 +177,19 @@ function getCurrentUrlFromTab(tab: chrome.tabs.Tab) {
 //     console.log('updated', info)
 // })
 
-chrome.webRequest.onBeforeRequest.addListener(details => {
-    console.log(details.tabId, _tabsProxyEnabled)
-}, _allUrlsFilter, [])
+// chrome.webRequest.onBeforeRequest.addListener(details => {
+//     console.log(details)
+// }, _allUrlsFilter, [])
 
-// declare global {
-//     interface Window {
-//         validateUrl: any
-//     }
-// }
+// chrome.tabs.onCreated.addListener(tab => {
+//     console.log(tab)
+// })
 
-// window.validateUrl = validateUrl
+declare global {
+    interface Window {
+        validateUrl: any
+    }
+}
+
+window.validateUrl = validateUrl
 //////////////////////////////////////////////////////////

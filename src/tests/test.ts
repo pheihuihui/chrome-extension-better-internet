@@ -42,10 +42,16 @@ function js_logProxyForUrls(url: string, host: string): TResult {
     }
 }
 
-testRequests.forEach(x => {
-    it('tests', () => {
-        let ts_res = ts_logProxyForUrls(x.URL, x.Host).ProxyType
-        let js_res = js_logProxyForUrls(x.URL, x.Host).ProxyType
-        assert.strictEqual(ts_res, js_res)
-    })
+// testRequests.forEach(x => {
+//     it('tests', () => {
+//         let ts_res = ts_logProxyForUrls(x.URL, x.Host).ProxyType
+//         let js_res = js_logProxyForUrls(x.URL, x.Host).ProxyType
+//         console.log(ts_res, js_res)
+//         assert.strictEqual(ts_res, js_res)
+//     })
+// })
+
+it('test2', () => {
+    let test2 = tsMatcher.matchesAny('chrome://newurl', 'newurl') instanceof BlockingFilter
+    console.log(test2)
 })
