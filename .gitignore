@@ -110,7 +110,7 @@ dist
 # Adblock Plus pac script
 src/pac.js
 
-
+# rules
 src/tests/testRules.ts
 src/tests/testRequests.ts
-src/personal_pac_rules.ts
+# src/personal_pac_rules.ts

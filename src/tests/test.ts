@@ -1,7 +1,6 @@
 import assert from "assert";
 import { BlockingFilter, CombinedMatcher, Filter, RegExpFilter } from "../pac_im";
-import { testRequests } from "./testRequests";
-import { testRules } from "./testRules";
+import { testRules } from "./test_rules";
 const pacjs = require('../pac.js')
 
 let tsMatcher = new CombinedMatcher()

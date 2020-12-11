@@ -1,31 +1,16 @@
-import { BlockingFilter, CombinedMatcher, Filter, RegExpFilter } from "./pac_im"
-import { testRules } from "./tests/testRules"
-import { TTabsProxyEnabled, TProxyType, _localStorageContentFieldName } from "./utils"
+import { Filter, RegExpFilter, BlockingFilter } from "./pac_im"
+import { TProxyType, _localStorageContentFieldName, _fixedMode, _proxyMatcher, _tabsProxyEnabled, _allUrlsFilter, _directMode } from "./utils"
+import { retrievePacList } from "./whats_new"
 
-const _proxyMatcher = new CombinedMatcher()
-const _adBlockMatcher = new CombinedMatcher()
-const _tabsProxyEnabled: TTabsProxyEnabled = {}
-const _directMode: chrome.proxy.ProxyConfig = {
-    mode: 'direct'
-}
-const _fixedMode: chrome.proxy.ProxyConfig = {
-    mode: 'fixed_servers',
-    rules: {
-        singleProxy: {
-            host: '127.0.0.1',
-            port: 10800
-        },
-        bypassList: [
-
-        ]
-    }
-}
-const _allUrlsFilter: chrome.webRequest.RequestFilter = { urls: ["<all_urls>"] }
 
 let cur_proxy: TProxyType = 'direct'
 let cur_tab = 0
 
-chrome.storage.local.set({ [_localStorageContentFieldName.personalPac]: testRules })
+chrome.runtime.onInstalled.addListener(details => {
+    retrievePacList().then(x => {
+        chrome.storage.local.set({ [_localStorageContentFieldName.personalPac]: x })
+    })
+})
 chrome.storage.local.set({ [_localStorageContentFieldName.proxyServer]: '127.0.0.1:10800' })
 chrome.storage.local.set({ [_localStorageContentFieldName.whatsNew]: {} })
 
