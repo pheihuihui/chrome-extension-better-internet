@@ -2,8 +2,7 @@ const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
     entry: {
-        index_popup: './src/popup.ts',
-        index_editor: './src/editor.ts',
+        editor: './src/editor.ts',
         background: './src/background.ts'
     },
     optimization: {
@@ -32,11 +31,6 @@ module.exports = {
             }
         ]
     },
-    // externals: {
-    //     react: "React",
-    //     "react-dom": "ReactDOM",
-    //     "material-ui": "MaterialUI"
-    // },
     plugins: [
         new CopyPlugin({
             patterns: [

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "cross-env TS_NODE_PROJECT=\"tsconfig.testing.json\" mocha --require ts-node/register './src/tests/*.ts'",
-    "build": "webpack"
+    "build": "webpack",
+    "start:dev": "webpack-dev-server"
   },
   "author": "",
   "license": "ISC",

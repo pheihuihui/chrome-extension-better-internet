@@ -1,19 +1,6 @@
 import { BlockingFilter, CombinedMatcher, Filter, RegExpFilter } from "./pac_im"
 import { testRules } from "./tests/testRules"
-
-export type TTabsProxyEnabled = Record<number, boolean>
-export type TPageType = 'pac' | 'local' | 'domestic'
-export type TProxyType = 'direct' | 'fixed'
-export type THistory = {
-    URL: string
-    Host: string
-}
-
-export const _localStoredContent = {
-    proxyServer: 'proxy_address',
-    personalPac: 'pac_personal',
-    gfwPac: 'pac_gfw'
-}
+import { TTabsProxyEnabled, TProxyType, _localStorageContentFieldName } from "./utils"
 
 const _proxyMatcher = new CombinedMatcher()
 const _adBlockMatcher = new CombinedMatcher()
@@ -38,12 +25,13 @@ const _allUrlsFilter: chrome.webRequest.RequestFilter = { urls: ["<all_urls>"] }
 let cur_proxy: TProxyType = 'direct'
 let cur_tab = 0
 
-chrome.storage.local.set({ [_localStoredContent.personalPac]: testRules })
-chrome.storage.local.set({ [_localStoredContent.proxyServer]: '127.0.0.1:10800' })
+chrome.storage.local.set({ [_localStorageContentFieldName.personalPac]: testRules })
+chrome.storage.local.set({ [_localStorageContentFieldName.proxyServer]: '127.0.0.1:10800' })
+chrome.storage.local.set({ [_localStorageContentFieldName.whatsNew]: {} })
 
-chrome.storage.local.get(Object.values(_localStoredContent), result => {
+chrome.storage.local.get(Object.values(_localStorageContentFieldName), result => {
     // get server
-    let server = result[_localStoredContent.proxyServer] as string
+    let server = result[_localStorageContentFieldName.proxyServer] as string
     let addr = server.split(":")[0]
     let port = server.split(":")[1]
     if (_fixedMode.rules?.singleProxy) {
@@ -54,7 +42,7 @@ chrome.storage.local.get(Object.values(_localStoredContent), result => {
     }
 
     // get rules
-    let allRules = result[_localStoredContent.personalPac] as string[]
+    let allRules = result[_localStorageContentFieldName.personalPac] as string[]
     for (const rule of allRules) {
         _proxyMatcher.add(Filter.fromText(rule) as RegExpFilter)
     }
@@ -193,3 +181,6 @@ declare global {
 
 window.validateUrl = validateUrl
 //////////////////////////////////////////////////////////
+
+
+export { }
